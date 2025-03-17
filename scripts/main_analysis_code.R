@@ -340,6 +340,21 @@
           d_cort3$T2M_MAX_correct_s <- scale(d_cort3$T2M_MAX_correct)
           d_cort3$T2M_correct_s <- scale(d_cort3$T2M)
           
+    # for inspecting LHS
+          
+          d_cort3 <- d_cort3 %>%
+            mutate(
+              LHS = case_when(
+                season == "breeding" ~ "breeding",
+                season == "non-breeding" ~ "non-breeding",
+                breed_state == "breeding" ~ "breeding",
+                breed_state == "migration" ~ "non-breeding",
+                breed_state == "pre-breeding" ~ "breeding",
+                breed_state == "non-breeding" ~ "non-breeding",
+                TRUE ~ NA_character_
+              )
+            )
+          
     # models using all species with combo of base/max/speed cort and avg/min/max temperature
       # note, there are a small number of very low temperatures that could be errors in location or 
       # are so far off that better to exclude
@@ -351,6 +366,11 @@
               m_base_avg <- mgcv::gam(log(base_cort) ~ s(T2M_correct) + s(alpha4, bs = "re") + 
                                 s(T2M_correct, alpha4, bs = "re"),
                               data = moddat_mba)  
+              m_base_avg_r <- mgcv::gam(log(base_cort) ~ s(alpha4, bs = "re"),
+                                      data = moddat_mba)  
+              m_base_avg_lh <- mgcv::gam(log(base_cort) ~ s(T2M_correct) + LHS + s(alpha4, bs = "re") + 
+                                        s(T2M_correct, alpha4, bs = "re"),
+                                      data = moddat_mba[is.na(moddat_mba$LHS) == FALSE, ])  
              
             # max temperature 
               moddat_mbh <- d_cort3[d_cort3$T2M_MAX_correct > -5 & is.na(d_cort3$base_cort) == FALSE, ]
@@ -358,6 +378,11 @@
               m_base_max <- mgcv::gam(log(base_cort) ~ s(T2M_MAX_correct) + s(alpha4, bs = "re") + 
                                         s(T2M_MAX_correct, alpha4, bs = "re"), 
                                       data = moddat_mbh) 
+              m_base_max_r <- mgcv::gam(log(base_cort) ~ s(alpha4, bs = "re"),
+                                        data = moddat_mbh)
+              m_base_max_lh <- mgcv::gam(log(base_cort) ~ s(T2M_MAX_correct) + LHS + s(alpha4, bs = "re") + 
+                                           s(T2M_MAX_correct, alpha4, bs = "re"),
+                                         data = moddat_mbh[is.na(moddat_mbh$LHS) == FALSE, ])  
             
             # min temperature  
               moddat_mbl <- d_cort3[d_cort3$T2M_MIN_correct > -5 & is.na(d_cort3$base_cort) == FALSE, ]
@@ -365,6 +390,11 @@
               m_base_min <- mgcv::gam(log(base_cort) ~ s(T2M_MIN_correct) + s(alpha4, bs = "re") + 
                                         s(T2M_MIN_correct, alpha4, bs = "re", sp = .3), 
                                       data = moddat_mbl) 
+              m_base_min_r <- mgcv::gam(log(base_cort) ~ s(alpha4, bs = "re", sp = 0.3),
+                                        data = moddat_mbl)
+              m_base_min_lh <- mgcv::gam(log(base_cort) ~ s(T2M_MIN_correct) + LHS + s(alpha4, bs = "re") + 
+                                        s(T2M_MIN_correct, alpha4, bs = "re", sp = .3), 
+                                      data = moddat_mbl[is.na(moddat_mbl$LHS) == FALSE, ]) 
           
         # max cort   
             # average temperature
@@ -372,7 +402,12 @@
               moddat_mma$response <- log(moddat_mma$max_cort)
               m_max_avg <- mgcv::gam(log(max_cort) ~ s(T2M_correct) + s(alpha4, bs = "re") + 
                                         s(T2M_correct, alpha4, bs = "re"), 
-                                      data = moddat_mma)  
+                                      data = moddat_mma) 
+              m_max_avg_r <- mgcv::gam(log(max_cort) ~ s(alpha4, bs = "re"), 
+                                     data = moddat_mma)  
+              m_max_avg_lh <- mgcv::gam(log(max_cort) ~ s(T2M_correct) + LHS + s(alpha4, bs = "re") + 
+                                       s(T2M_correct, alpha4, bs = "re"), 
+                                     data = moddat_mma[is.na(moddat_mma$LHS) == FALSE, ]) 
             
             # max temperature 
               moddat_mmh <- d_cort3[d_cort3$T2M_correct > -5 & is.na(d_cort3$max_cort) == FALSE, ]
@@ -380,6 +415,11 @@
               m_max_max <- mgcv::gam(log(max_cort) ~ s(T2M_MAX_correct) + s(alpha4, bs = "re") + 
                                         s(T2M_MAX_correct, alpha4, bs = "re"), 
                                       data = moddat_mmh) 
+              m_max_max_r <- mgcv::gam(log(max_cort) ~ s(alpha4, bs = "re"), 
+                                     data = moddat_mmh) 
+              m_max_max_lh <- mgcv::gam(log(max_cort) ~ s(T2M_MAX_correct) + LHS + s(alpha4, bs = "re") + 
+                                       s(T2M_MAX_correct, alpha4, bs = "re"), 
+                                     data = moddat_mmh[is.na(moddat_mmh$LHS) == FALSE, ]) 
             
             # min temperature  
               moddat_mml <- d_cort3[d_cort3$T2M_correct > -5 & is.na(d_cort3$max_cort) == FALSE, ]
@@ -387,6 +427,11 @@
               m_max_min <- mgcv::gam(log(max_cort) ~ s(T2M_MIN_correct) + s(alpha4, bs = "re") + 
                                         s(T2M_MIN_correct, alpha4, bs = "re"), 
                                       data = moddat_mml) 
+              m_max_min_r <- mgcv::gam(log(max_cort) ~ s(alpha4, bs = "re"), 
+                                     data = moddat_mml) 
+              m_max_min_lh <- mgcv::gam(log(max_cort) ~ s(T2M_MIN_correct) + LHS + s(alpha4, bs = "re") + 
+                                       s(T2M_MIN_correct, alpha4, bs = "re"), 
+                                     data = moddat_mml[is.na(moddat_mml$LHS) == FALSE, ]) 
 
         # speed cort   
             # average temperature
@@ -395,6 +440,11 @@
               m_spd_avg <- mgcv::gam(log(speed) ~ s(T2M_correct) + s(alpha4, bs = "re") + 
                                        s(T2M_correct, alpha4, bs = "re"), 
                                      data = moddat_msa)  
+              m_spd_avg_r <- mgcv::gam(log(speed) ~ s(alpha4, bs = "re"), 
+                                     data = moddat_msa)
+              m_spd_avg_lh <- mgcv::gam(log(speed) ~ s(T2M_correct) + LHS +s(alpha4, bs = "re") + 
+                                       s(T2M_correct, alpha4, bs = "re"), 
+                                     data = moddat_msa[is.na(moddat_msa$LHS) == FALSE, ])  
             
             # max temperature  
               moddat_msh <- d_cort3[d_cort3$T2M_correct > -5 & d_cort3$speed > 0, ]
@@ -402,6 +452,11 @@
               m_spd_max <- mgcv::gam(log(speed) ~ s(T2M_MAX_correct) + s(alpha4, bs = "re") + 
                                        s(T2M_MAX_correct, alpha4, bs = "re"), 
                                      data = moddat_msh) 
+              m_spd_max_r <- mgcv::gam(log(speed) ~ s(alpha4, bs = "re"), 
+                                     data = moddat_msh) 
+              m_spd_max_lh <- mgcv::gam(log(speed) ~ s(T2M_MAX_correct) + LHS + s(alpha4, bs = "re") + 
+                                       s(T2M_MAX_correct, alpha4, bs = "re"), 
+                                     data = moddat_msh[is.na(moddat_msh$LHS) == FALSE, ]) 
             
             # min temperature  
               moddat_msl <- d_cort3[d_cort3$T2M_correct > -5 & d_cort3$speed > 0, ]
@@ -409,6 +464,11 @@
               m_spd_min <- mgcv::gam(log(speed) ~ s(T2M_MIN_correct) + s(alpha4, bs = "re") + 
                                        s(T2M_MIN_correct, alpha4, bs = "re"), 
                                      data = moddat_msl) 
+              m_spd_min_r <- mgcv::gam(log(speed) ~ s(alpha4, bs = "re"), 
+                                     data = moddat_msl) 
+              m_spd_min_lh <- mgcv::gam(log(speed) ~ s(T2M_MIN_correct) + LHS + s(alpha4, bs = "re") + 
+                                       s(T2M_MIN_correct, alpha4, bs = "re"), 
+                                     data = moddat_msl[is.na(moddat_msl$LHS) == FALSE, ])
  
 ## Fit the same GAMMS but using temperature anomaly ----                       
     # repeat the same models but using temperature anomaly
@@ -419,6 +479,11 @@
               m_base_avg_a <- mgcv::gam(log(base_cort) ~ s(avg_anomaly) + s(alpha4, bs = "re") + 
                                 s(avg_anomaly, alpha4, bs = "re"),
                               data = moddat_mbaa)  
+              m_base_avg_ar <- mgcv::gam(log(base_cort) ~ s(alpha4, bs = "re"),
+                                        data = moddat_mbaa)  
+              m_base_avg_a_lh <- mgcv::gam(log(base_cort) ~ s(avg_anomaly) + LHS + s(alpha4, bs = "re") + 
+                                          s(avg_anomaly, alpha4, bs = "re"),
+                                        data = moddat_mbaa[is.na(moddat_mbaa$LHS) == FALSE, ])  
              
             # max temperature 
               moddat_mbha <- d_cort3[d_cort3$max_anomaly > -20 & is.na(d_cort3$base_cort) == FALSE, ]
@@ -426,6 +491,11 @@
               m_base_max_a <- mgcv::gam(log(base_cort) ~ s(max_anomaly) + s(alpha4, bs = "re") + 
                                         s(max_anomaly, alpha4, bs = "re"), 
                                       data = moddat_mbha) 
+              m_base_max_ar <- mgcv::gam(log(base_cort) ~ s(alpha4, bs = "re"), 
+                                        data = moddat_mbha) 
+              m_base_max_a_lh <- mgcv::gam(log(base_cort) ~ s(max_anomaly) + LHS + s(alpha4, bs = "re") + 
+                                          s(max_anomaly, alpha4, bs = "re"), 
+                                        data = moddat_mbha[is.na(moddat_mbha$LHS) == FALSE, ]) 
             
             # min temperature  
               moddat_mbla <- d_cort3[d_cort3$min_anomaly > -20 & is.na(d_cort3$base_cort) == FALSE, ]
@@ -433,6 +503,11 @@
               m_base_min_a <- mgcv::gam(log(base_cort) ~ s(min_anomaly, sp = 0.2) + s(alpha4, bs = "re") + 
                                         s(min_anomaly, alpha4, bs = "re", sp = .3), 
                                       data = moddat_mbla) 
+              m_base_min_ar <- mgcv::gam(log(base_cort) ~ s(alpha4, bs = "re"), 
+                                        data = moddat_mbla) 
+              m_base_min_a_lh <- mgcv::gam(log(base_cort) ~ s(min_anomaly, sp = 0.2) + LHS + s(alpha4, bs = "re") + 
+                                          s(min_anomaly, alpha4, bs = "re", sp = .3), 
+                                        data = moddat_mbla[is.na(moddat_mbla$LHS) == FALSE, ]) 
                   
         # max cort   
             # average temperature
@@ -441,6 +516,11 @@
               m_max_avg_a <- mgcv::gam(log(max_cort) ~ s(avg_anomaly, sp = 0.1) + s(alpha4, bs = "re") + 
                                         s(avg_anomaly, alpha4, bs = "re"), 
                                       data = moddat_mmaa)  
+              m_max_avg_ar <- mgcv::gam(log(max_cort) ~ s(alpha4, bs = "re"), 
+                                       data = moddat_mmaa) 
+              m_max_avg_a_lh <- mgcv::gam(log(max_cort) ~ s(avg_anomaly, sp = 0.1) + s(alpha4, bs = "re") + 
+                                         s(avg_anomaly, alpha4, bs = "re"), 
+                                       data = moddat_mmaa[is.na(moddat_mmaa$LHS) == FALSE, ]) 
             
             # max temperature 
               moddat_mmha <- d_cort3[d_cort3$max_anomaly > -20 & is.na(d_cort3$max_cort) == FALSE, ]
@@ -448,6 +528,11 @@
               m_max_max_a <- mgcv::gam(log(max_cort) ~ s(max_anomaly, sp = 0.1) + s(alpha4, bs = "re") + 
                                         s(max_anomaly, alpha4, bs = "re"), 
                                       data = moddat_mmha) 
+              m_max_max_ar <- mgcv::gam(log(max_cort) ~ s(alpha4, bs = "re"), 
+                                        data = moddat_mmha)
+              m_max_max_a_lh <- mgcv::gam(log(max_cort) ~ s(max_anomaly, sp = 0.1) + LHS + s(alpha4, bs = "re") + 
+                                         s(max_anomaly, alpha4, bs = "re"), 
+                                       data = moddat_mmha[is.na(moddat_mmha$LHS) == FALSE, ]) 
             
             # min temperature  
               moddat_mmla <- d_cort3[d_cort3$min_anomaly > -20 & is.na(d_cort3$max_cort) == FALSE, ]
@@ -455,6 +540,11 @@
               m_max_min_a <- mgcv::gam(log(max_cort) ~ s(min_anomaly, sp = 0.1) + s(alpha4, bs = "re") + 
                                         s(min_anomaly, alpha4, bs = "re"), 
                                       data = moddat_mmla) 
+              m_max_min_ar <- mgcv::gam(log(max_cort) ~ s(alpha4, bs = "re"), 
+                                       data = moddat_mmla) 
+              m_max_min_a_lh <- mgcv::gam(log(max_cort) ~ s(min_anomaly, sp = 0.1) + LHS + s(alpha4, bs = "re") + 
+                                         s(min_anomaly, alpha4, bs = "re"), 
+                                       data = moddat_mmla[is.na(moddat_mmla$LHS) == FALSE, ]) 
         
         # speed cort   
             # average temperature
@@ -463,6 +553,11 @@
               m_spd_avg_a <- mgcv::gam(log(speed) ~ s(avg_anomaly, sp = 0.1) + s(alpha4, bs = "re") + 
                                        s(avg_anomaly, alpha4, bs = "re"), 
                                      data = moddat_msaa)  
+              m_spd_avg_ar <- mgcv::gam(log(speed) ~ s(alpha4, bs = "re"), 
+                                       data = moddat_msaa)  
+              m_spd_avg_a_lh <- mgcv::gam(log(speed) ~ s(avg_anomaly, sp = 0.1) + LHS + s(alpha4, bs = "re") + 
+                                         s(avg_anomaly, alpha4, bs = "re"), 
+                                       data = moddat_msaa[is.na(moddat_msaa$LHS) == FALSE, ])  
             
             # max temperature  
               moddat_msha <- d_cort3[d_cort3$max_anomaly > -20 & d_cort3$speed > 0, ]
@@ -470,13 +565,23 @@
               m_spd_max_a <- mgcv::gam(log(speed) ~ s(max_anomaly, sp = 0.1) + s(alpha4, bs = "re") + 
                                        s(max_anomaly, alpha4, bs = "re"), 
                                      data = moddat_msha) 
+              m_spd_max_ar <- mgcv::gam(log(speed) ~ s(alpha4, bs = "re"), 
+                                       data = moddat_msha) 
+              m_spd_max_a_lh <- mgcv::gam(log(speed) ~ s(max_anomaly, sp = 0.1) + LHS + s(alpha4, bs = "re") + 
+                                         s(max_anomaly, alpha4, bs = "re"), 
+                                       data = moddat_msha[is.na(moddat_msha$LHS) == FALSE, ]) 
             
             # min temperature  
               moddat_msla <- d_cort3[d_cort3$min_anomaly > -20 & d_cort3$speed > 0, ]
               moddat_msla$response <- log(moddat_msla$speed)
               m_spd_min_a <- mgcv::gam(log(speed) ~ s(min_anomaly, sp = 0.1) + s(alpha4, bs = "re") + 
                                        s(min_anomaly, alpha4, bs = "re"), 
-                                     data = moddat_msla)               
+                                     data = moddat_msla)  
+              m_spd_min_ar <- mgcv::gam(log(speed) ~ s(alpha4, bs = "re"), 
+                                       data = moddat_msla)    
+              m_spd_min_a_lh <- mgcv::gam(log(speed) ~ s(min_anomaly, sp = 0.1) + LHS + s(alpha4, bs = "re") + 
+                                         s(min_anomaly, alpha4, bs = "re"), 
+                                       data = moddat_msla[is.na(moddat_msla$LHS) == FALSE, ])  
             
 ## Custom plotting function to use with the GAMMs ----
               # Create a function for plots
@@ -515,6 +620,37 @@
               theme(panel.grid = element_blank(), axis.text = element_text(size = 12), axis.title = element_text(size = 14)) +
               annotate("text", x = -Inf, y = Inf, label = lab_lett, hjust = -0.5, vjust = 1.5, size = 6)
         }
+              
+     ## to get just the values without plotting
+              
+              gam_cort_plot2 <- function(model_name = NA, lab_lett = "A", xlabber = "Average Temperature (°C)",
+                                        moddat = NA, temp_var = NA,
+                                        ylabber = "Baseline Corticosterone (log ng/ml)",
+                                        col_col = "#D95F02", fill_col = "#D95F02", p_obj = p_obj_in){
+                
+                # get intercept
+                  intercept <- coef(model_name)[1]
+                
+                # Create a new data frame for predictions (using a sequence of temperature values)
+                  new_data <- data.frame(temp_var = seq(min(na.omit(moddat[[temp_var]])),
+                                                      max(na.omit(moddat[[temp_var]])), length.out = 100))
+                
+                # get details from fit model
+                  p_obj <- plot(model_name, residuals = TRUE, pages = 1)
+                  p_obj2 <- p_obj[[1]]
+                  sm_df <- as.data.frame(p_obj2[c("x", "se", "fit")])
+                  data.df <- as.data.frame(p_obj2[c("raw", "p.resid")])
+                
+                # add intercept to fit values
+                  sm_df$fit <- sm_df$fit + intercept
+                
+                # Add the intercept to the residuals
+                  data.df$p.resid <- data.df$p.resid + intercept
+                
+                # make the plot
+                  sm_df
+              }
+              
 ## Make plots and tables for all species combined ----                    
     
       # now make plots with the function  
@@ -522,14 +658,29 @@
             # base cort average temperature
               p_base_avg <- gam_cort_plot(m_base_avg, lab_lett = "A", xlabber = "Average Temperature (°C)",
                                           ylabber = "Baseline Corticosterone \n (log ng/ml)", moddat = moddat_mba, temp_var = "T2M_correct")
+              p_base_avg_lh <- gam_cort_plot2(m_base_avg_lh, lab_lett = "B", xlabber = "Average Temperature (°C)",
+                                          ylabber = "Baseline Corticosterone \n (log ng/ml)", moddat = moddat_mba[is.na(moddat_mba$LHS) == FALSE, ], temp_var = "T2M_correct")
+              p_base_avg_lh_plot <- p_base_avg +
+                geom_ribbon(data = p_base_avg_lh, aes(ymin = fit-se*1.96, ymax = fit+se*1.96, y = NULL), alpha = 0.35, fill = "forestgreen") +
+                geom_line(data = p_base_avg_lh, color = "forestgreen", size = 1.2)
               
             # max cort average temperature
               p_max_avg <- gam_cort_plot(m_max_avg, lab_lett = "B", xlabber = "Average Temperature (°C)",
                                           ylabber = "Maximum Corticosterone \n (log ng/ml)", moddat = moddat_mma, temp_var = "T2M_correct")
+              p_max_avg_lh <- gam_cort_plot2(m_max_avg_lh, lab_lett = "B", xlabber = "Average Temperature (°C)",
+                                              ylabber = "Maximum Corticosterone \n (log ng/ml)", moddat = moddat_mma[is.na(moddat_mma$LHS) == FALSE, ], temp_var = "T2M_correct")
+              p_max_avg_lh_plot <- p_max_avg +
+                geom_ribbon(data = p_max_avg_lh, aes(ymin = fit-se*1.96, ymax = fit+se*1.96, y = NULL), alpha = 0.35, fill = "forestgreen") +
+                geom_line(data = p_max_avg_lh, color = "forestgreen", size = 1.2)
               
             # cort speed average temperature
               p_spd_avg <- gam_cort_plot(m_spd_avg, lab_lett = "C", xlabber = "Average Temperature (°C)",
                                          ylabber = "Corticosterone Speed \n (log ng/ml/min)", moddat = moddat_msa, temp_var = "T2M_correct")
+              p_spd_avg_lh <- gam_cort_plot2(m_spd_avg_lh, lab_lett = "B", xlabber = "Average Temperature (°C)",
+                                             ylabber = "Maximum Corticosterone \n (log ng/ml)", moddat = moddat_msa[is.na(moddat_msa$LHS) == FALSE, ], temp_var = "T2M_correct")
+              p_spd_avg_lh_plot <- p_spd_avg +
+                geom_ribbon(data = p_spd_avg_lh, aes(ymin = fit-se*1.96, ymax = fit+se*1.96, y = NULL), alpha = 0.35, fill = "forestgreen") +
+                geom_line(data = p_spd_avg_lh, color = "forestgreen", size = 1.2)
     
             # combine plots     
               avg_combo <- ggarrange(p_base_avg + ylim(c(0, 4.5)) + xlim(c(-3,38)), p_max_avg + ylim(c(2, 5.5)) + xlim(c(-3,38)), p_spd_avg + ylim(c(-1, 2.5)) + xlim(c(-3,38)), nrow = 1)
@@ -541,18 +692,35 @@
             # base cort min temperature
               p_base_min <- gam_cort_plot(m_base_min, lab_lett = "A", xlabber = "Minimum Temperature (°C)",
                                           ylabber = "Baseline Corticosterone \n (log ng/ml)", moddat = moddat_mbl, temp_var = "T2M_MIN_correct")
+              p_base_min_lh <- gam_cort_plot2(m_base_min_lh, lab_lett = "B", xlabber = "Minimum Temperature (°C)",
+                                              ylabber = "Baseline Corticosterone \n (log ng/ml)", moddat = moddat_mbl[is.na(moddat_mbl$LHS) == FALSE, ], temp_var = "T2M_correct")
+              p_base_min_lh_plot <- p_base_min +
+                geom_ribbon(data = p_base_min_lh, aes(ymin = fit-se*1.96, ymax = fit+se*1.96, y = NULL), alpha = 0.35, fill = "forestgreen") +
+                geom_line(data = p_base_min_lh, color = "forestgreen", size = 1.2)
               
             # max cort min temperature
               p_max_min <- gam_cort_plot(m_max_min, lab_lett = "B", xlabber = "Minimum Temperature (°C)",
                                          ylabber = "Maximum Corticosterone \n (log ng/ml)", moddat = moddat_mml, temp_var = "T2M_MIN_correct")
+              p_max_min_lh <- gam_cort_plot2(m_max_min_lh, lab_lett = "B", xlabber = "Minimum Temperature (°C)",
+                                              ylabber = "Maximum Corticosterone \n (log ng/ml)", moddat = moddat_mml[is.na(moddat_mml$LHS) == FALSE, ], temp_var = "T2M_correct")
+              p_max_min_lh_plot <- p_max_min +
+                geom_ribbon(data = p_max_min_lh, aes(ymin = fit-se*1.96, ymax = fit+se*1.96, y = NULL), alpha = 0.35, fill = "forestgreen") +
+                geom_line(data = p_max_min_lh, color = "forestgreen", size = 1.2)
               
             # cort speed min temperature
               p_spd_min <- gam_cort_plot(m_spd_min, lab_lett = "C", xlabber = "Minimum Temperature (°C)",
                                          ylabber = "Corticosterone Speed \n (log ng/ml/min)", moddat = moddat_msl, temp_var = "T2M_MIN_correct")
+              p_spd_min_lh <- gam_cort_plot2(m_spd_min_lh, lab_lett = "B", xlabber = "Minimum Temperature (°C)",
+                                             ylabber = "Corticosterone Speed \n (log ng/ml)", moddat = moddat_msl[is.na(moddat_msl$LHS) == FALSE, ], temp_var = "T2M_correct")
+              p_spd_min_lh_plot <- p_spd_min +
+                geom_ribbon(data = p_spd_min_lh, aes(ymin = fit-se*1.96, ymax = fit+se*1.96, y = NULL), alpha = 0.35, fill = "forestgreen") +
+                geom_line(data = p_spd_min_lh, color = "forestgreen", size = 1.2)
               
             # combine plots     
               min_combo <- ggarrange(p_base_min + ylim(c(0, 5)) + xlim(c(-6, 30)), p_max_min + ylim(c(2, 6)) + xlim(c(-6, 30)), 
                                      p_spd_min + ylim(c(-1, 3.5)) + xlim(c(-6, 30)), nrow = 1)
+              min_combo_lh <- ggarrange(p_base_min_lh_plot + ylim(c(0, 5)) + xlim(c(-6, 30)), p_max_min_lh_plot + ylim(c(2, 6)) + xlim(c(-6, 30)), 
+                                     p_spd_min_lh_plot + ylim(c(-1, 3.5)) + xlim(c(-6, 30)), nrow = 1)
               ggsave(here::here("figs_and_tabs", "p_min_combo.png"), min_combo,
                      device = "png", width = 9.5, height = 2.9, dpi = 300, units = "in")
 
@@ -620,18 +788,35 @@
             # base cort min temperature
               p_base_min_a <- gam_cort_plot(m_base_min_a, lab_lett = "A", xlabber = "Minimum Anomaly (°C)",
                                           ylabber = "Baseline Corticosterone \n (log ng/ml)", moddat = moddat_mbla, temp_var = "min_anomaly")
+              p_base_min_a_lh <- gam_cort_plot2(m_base_min_a_lh, lab_lett = "B", xlabber = "Minimum Anomaly (°C)",
+                                              ylabber = "Baseline Corticosterone \n (log ng/ml)", moddat = moddat_mbla[is.na(moddat_mbla$LHS) == FALSE, ], temp_var = "min_anomaly")
+              p_base_min_a_lh_plot <- p_base_min_a +
+                geom_ribbon(data = p_base_min_a_lh, aes(ymin = fit-se*1.96, ymax = fit+se*1.96, y = NULL), alpha = 0.35, fill = "forestgreen") +
+                geom_line(data = p_base_min_a_lh, color = "forestgreen", size = 1.2)
               
             # max cort min temperature
               p_max_min_a <- gam_cort_plot(m_max_min_a, lab_lett = "B", xlabber = "Minimum Anomaly (°C)",
                                          ylabber = "Maximum Corticosterone \n (log ng/ml)", moddat = moddat_mmla, temp_var = "min_anomaly")
+              p_max_min_a_lh <- gam_cort_plot2(m_max_min_a_lh, lab_lett = "B", xlabber = "Minimum Anomaly (°C)",
+                                                ylabber = "Maximum Corticosterone \n (log ng/ml)", moddat = moddat_mmla[is.na(moddat_mmla$LHS) == FALSE, ], temp_var = "min_anomaly")
+              p_max_min_a_lh_plot <- p_max_min_a +
+                geom_ribbon(data = p_max_min_a_lh, aes(ymin = fit-se*1.96, ymax = fit+se*1.96, y = NULL), alpha = 0.35, fill = "forestgreen") +
+                geom_line(data = p_max_min_a_lh, color = "forestgreen", size = 1.2)
               
             # cort speed min temperature
               p_spd_min_a <- gam_cort_plot(m_spd_min_a, lab_lett = "C", xlabber = "Minimum Anomaly (°C)",
                                          ylabber = "Corticosterone Speed \n (log ng/ml/min)", moddat = moddat_msla, temp_var = "min_anomaly")
+              p_spd_min_a_lh <- gam_cort_plot2(m_spd_min_a_lh, lab_lett = "B", xlabber = "Minimum Anomaly (°C)",
+                                               ylabber = "Corticosterone Speed \n (log ng/ml)", moddat = moddat_msla[is.na(moddat_msla$LHS) == FALSE, ], temp_var = "min_anomaly")
+              p_spd_min_a_lh_plot <- p_spd_min_a +
+                geom_ribbon(data = p_spd_min_a_lh, aes(ymin = fit-se*1.96, ymax = fit+se*1.96, y = NULL), alpha = 0.35, fill = "forestgreen") +
+                geom_line(data = p_spd_min_a_lh, color = "forestgreen", size = 1.2)
               
             # combine plots     
               min_combo_a <- ggarrange(p_base_min_a + ylim(c(0, 5)) + xlim(c(-13, 30)), p_max_min_a + ylim(c(1.5, 5.5)) + xlim(c(-13, 30)), 
                                        p_spd_min_a + ylim(c(-2.5, 4)) + xlim(c(-13, 30)), nrow = 1)
+              anom_lh_plot <- ggarrange(p_base_min_a_lh_plot + ylim(c(0, 5)) + xlim(c(-13, 30)), p_max_min_a_lh_plot + ylim(c(1.5, 5.5)) + xlim(c(-13, 30)), 
+                                        p_spd_min_a_lh_plot + ylim(c(-2.5, 4)) + xlim(c(-13, 30)), nrow = 1)
               ggsave(here::here("figs_and_tabs", "p_min_combo_a.png"), min_combo_a,
                      device = "png", width = 9.5, height = 2.9, dpi = 300, units = "in")
 
